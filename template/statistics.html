@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Python Flask Bucket List App</title>
+    <link rel="shortcut icon" type="image/png" href="static/logo.png"/>
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+    .bar {
+      fill: steelblue;
+    }
+
+    .bar:hover {
+      fill: darkblue;
+    }
+
+    .axis--x path {
+      display: none;
+    }
+    </style>
+    <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+    <link src="datepicker.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+    <script src="/static/bootstrap-datepicker.js"></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+
+
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <nav>
+                <ul class="nav nav-pills pull-right">
+                    <li><a class="btn btn-primary" href="/" role="button">Relatório</a></li>
+                    <li><a class="btn btn-primary" href="/classify" role="button">Classificar</a></li
+                </ul>
+            </nav>
+            <div>
+              <img src="/static/logo.png" style="float: left;" height="60" width="52">
+              <h3 class="text-muted">PFC - Detecção de botnets</h3>
+            </div>
+        </div>
+        <br/>
+        <h3>Insira uma data:</h3>
+        <div>
+          <form class="form-inline a">
+            <div class="form-group">
+              <input type="text" class="input-append form-control datepicker" data-date-format="yyyy-MM-dd" id="date">
+              <button type="button" class="btn btn-primary" id="searchDate">Buscar</button>
+            </div>
+          </form>
+        </div>
+        <hr>
+        <br/>
+        <!-- </div> -->
+
+        <div class="row marketing">
+            <div class="col-lg-12" id="tb">
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>INSTITUTO MILITAR DE ENGENHARIA</p>
+        </footer>
+        <script type="text/javascript">
+          $(function(){
+            document.getElementById('searchDate').onclick =
+                function () {
+                   var date = $('#date').val();
+                   $.ajax({
+                     url: '/statistics',
+                     data: JSON.stringify({date: date}),
+                     contentType: 'application/json;charset=UTF-8',
+                     type: 'POST',
+                     success: function(response) {
+                       var values = $.parseJSON(response);
+                       plotBarGraph(values);
+                     },
+                     error: function(error) {
+                       console.log(error);
+                     }
+                   });
+                 };
+            function plotBarGraph(values){
+              $('#tb').append("<svg width='800' height='400'></svg>");
+              var svg = d3.select("svg"),
+                margin = {top: 20, right: 20, bottom: 30, left: 40},
+                width = +svg.attr("width") - margin.left - margin.right,
+                height = +svg.attr("height") - margin.top - margin.bottom;
+
+              var x = d3.scaleBand().rangeRound([0, width]).padding(0.1),
+              y = d3.scaleLinear().rangeRound([height, 0]);
+
+              var g = svg.append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+              // d3.json('localhost:5000/statistics', function(d){
+              //   console.log(d);
+              // })
+              x.domain(values.map(function(d) {return d.model; }));
+              y.domain([0, d3.max(values, function(d) { return +d.ataques; })]);
+
+              g.append("g")
+                .attr("class", "axis axis--x")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x));
+              g.append("g")
+                .attr("class", "axis axis--y")
+                .call(d3.axisLeft(y))
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", "0.71em")
+                .attr("text-anchor", "end")
+                .text("Frequency");
+
+                g.selectAll(".bar")
+                .data(values)
+                .enter().append("rect")
+                  .attr("class", "bar")
+                  .attr("x", function(d) { return x(d.model); })
+                  .attr("y", function(d) { return y(+d.ataques); })
+                  .attr("width", x.bandwidth())
+                  .attr("height", function(d) { return height - y(+d.ataques); });
+            }
+
+            $('.datepicker').datepicker();
+          });
+        </script>
+    </div>
+</body>
+
+</html>

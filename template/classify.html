@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>PFC - Detecção de Botnets</title>
+    <link rel="shortcut icon" type="image/png" href="static/logo.png"/>
+    <link href="http://getbootstrap.com/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="http://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+    <link src="datepicker.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+    <script src="/static/bootstrap-datepicker.js"></script>
+
+
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <nav>
+                <ul class="nav nav-pills pull-right">
+                    <li><a class="btn btn-primary" href="/" role="button">Relatório</a></li>
+                    <li><a class="btn btn-primary" href="/statistics" role="button">Estatística</a></li>
+                </ul>
+            </nav>
+            <div>
+              <img src="/static/logo.png" style="float: left;" height="60" width="52">
+              <h3 class="text-muted">PFC - Detecção de botnets</h3>
+            </div>
+        </div>
+          <br/>
+            <h3>Insira o arquivo netflow:</h3>
+              <div >
+                <form class="form-inline a" action="/classify" method='post' enctype="multipart/form-data">
+                  <div class="form-group">
+                    <input type="file" name="file">
+                    <button type="submit" class="btn btn-primary">Buscar</button>
+                  </div>
+              </div>
+            </p>
+          <hr>
+            <br/>
+            <div class="col-md-6 col-md-offset-5">
+
+            </div>
+        <!-- </div> -->
+
+        <div class="row marketing">
+            <div class="col-lg-12" id="tb">
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>INSTITUTO MILITAR DE ENGENHARIA</p>
+        </footer>
+        <script type="text/javascript">
+           $(function(){ // I use jQuery in this example
+               document.getElementById('search').onclick =
+                   function () {
+                      var date = $('#date').val();
+                      var model = $('#model').val();
+                      var ip = $('#ip').val();
+                      console.log(date);
+                      $.ajax({
+                        url: '/search',
+                        data: JSON.stringify({model: model, ip: ip, date: date}),
+                        contentType: 'application/json;charset=UTF-8',
+                        type: 'POST',
+                        success: function(response) {
+                          var values = $.parseJSON(response);
+                          plotTable(values);
+                        },
+                        error: function(error) {
+                          console.log(error);
+                        }
+                      });
+                    };
+           });
+
+        </script>
+    </div>
+</body>
+
+</html>

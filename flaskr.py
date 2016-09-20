@@ -1,13 +1,33 @@
 # coding: utf-8
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect
 import json
 from flask.ext.sqlalchemy import SQLAlchemy
+from sqlalchemy import func
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from utils import preprocessing
+import os
 
-app = Flask(__name__, template_folder='template')
+
+app = Flask(__name__, template_folder='template', static_folder='static', static_url_path='/static')
 app.config['DEBUG'] = True
 app.config.from_pyfile('config.py')
 db = SQLAlchemy(app)
+
+some_engine = create_engine('postgresql://postgres:248091-Jr@localhost/pfc')
+Session = sessionmaker(bind=some_engine)
+session = Session()
+
+UPLOAD_FOLDER = './netflow/'
+ALLOWED_EXTENSIONS = set(['binetflow', 'csv'])
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
+
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 class Diagnostics(db.Model):
 
@@ -30,7 +50,7 @@ def search():
         model = data['model']
         date = data['date']
         ip = data['ip']
-
+        print(date)
         if model and date and ip:
             values = Diagnostics.query.filter_by(addr=ip, model=model, date=date).all()
         elif model and date:
@@ -61,6 +81,43 @@ def search():
         return json.dumps(results)
     else:
         pass
+
+@app.route('/statistics', methods=['GET', 'POST'])
+def statistics():
+    if request.method == 'POST':
+        data = json.loads(request.data)
+        date = data['date']
+        if date:
+            values = session.query(Diagnostics.model, func.count('addr').label('ataques')).filter(Diagnostics.date == date).group_by(Diagnostics.model);
+            results = []
+            for value in values:
+                result = {}
+                result['model'] = value.model.strip()
+                result['ataques'] = value.ataques
+                results.append(result)
+            return json.dumps(results)
+
+    else:
+        return render_template('statistics.html')
+
+
+@app.route('/classify', methods=['GET', 'POST'])
+def classify():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+            preprocessing.save_netflow()
+            preprocessing.preprocessor()
+            return redirect(request.url)
+    else:
+        return render_template('classify.html')
+
+
 
 if __name__ == '__main__':
     app.run()
