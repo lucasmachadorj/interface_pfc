@@ -3,7 +3,7 @@ import pandas as pd
 import psycopg2
 import paramiko
 
-def save_netflow():
+def save_netflow(hostname, port, user, password, dbname, ):
     for filename in os.listdir("./netflow/"):
         if filename.endswith('.binetflow'):
             name = filename.split('.')
@@ -15,11 +15,12 @@ def save_netflow():
     data = pd.read_csv(os.path.join('./netflow/',fname))
     del data['Label']
     data.to_csv('./netflow/{}'.format(fname), header=None, index=None)
-
+    print hostname, port, user, password, dbname
     try:
-        conn = psycopg2.connect(host='192.168.0.26', port='5432',user="postgres", password='mec050710', dbname='testdb')
+        conn = psycopg2.connect(host=hostname, port=port, user=user, password=password, dbname=dbname)
     except:
         print 'Falha ao se conectar com o banco'
+        os.remove(os.path.join('./netflow/', fname))
 
     cur = conn.cursor()
     f = open('{}'.format(os.path.join('./netflow/',fname)), 'r')
@@ -28,10 +29,10 @@ def save_netflow():
     conn.commit()
     os.remove(os.path.join('./netflow/', fname))
 
-def preprocessor():
+def preprocessor(hostname, port, username, password):
+    print 'HOSTNAME: {}'.format(hostname)
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('192.168.0.26', port=7777, username='machado', password='lucas')
+    ssh.connect(hostname, int(port), username=username, password=password)
     stdin, stdout, stderr = ssh.exec_command('cd /home/cristopher/pfc/classifier; ./preprocessor bothunter.conf; ./classifier bothunter.conf;')
-    # stdin, stdout, stderr = ssh.exec_command('ls')
     print stdout.readlines()

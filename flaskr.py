@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from flask import Flask, render_template, request, jsonify, redirect
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 import json
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import func
@@ -101,8 +101,8 @@ def statistics():
         return render_template('statistics.html')
 
 
-@app.route('/classify', methods=['GET', 'POST'])
-def classify():
+@app.route('/loadnetflow', methods=['GET', 'POST'])
+def load_netflow():
     if request.method == 'POST':
         if 'file' not in request.files:
             return redirect(request.url)
@@ -110,14 +110,34 @@ def classify():
         if file.filename == '':
             return redirect(request.url)
         if file and allowed_file(file.filename):
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
-            preprocessing.save_netflow()
-            preprocessing.preprocessor()
+            ip = request.form['ip']
+            port = request.form['port']
+            username = request.form['username']
+            password = request.form['password']
+            dbname = request.form['dbname']
+            if not (ip and username and password and dbname):
+                return redirect(request.url)
+            else:
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+                preprocessing.save_netflow(ip, port, username, password, dbname)
+                return redirect('/classify')
+    else:
+        return render_template('loadnetflow.html')
+
+@app.route('/classify', methods=['GET', 'POST'])
+def classify():
+    if request.method == 'POST':
+        ip = request.form['ip']
+        port = request.form['port']
+        username = request.form['username']
+        password = request.form['password']
+        if not (ip and port and username and password):
+            return redirect(request.url)
+        else:
+            preprocessing.preprocessor(ip, port, username, password)
             return redirect(request.url)
     else:
         return render_template('classify.html')
-
-
 
 if __name__ == '__main__':
     app.run()
