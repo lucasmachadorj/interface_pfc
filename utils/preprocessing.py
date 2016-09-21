@@ -3,7 +3,7 @@ import pandas as pd
 import psycopg2
 import paramiko
 
-def save_netflow(hostname, port, user, password, dbname, ):
+def save_netflow(hostname, port, user, password, dbname ):
     for filename in os.listdir("./netflow/"):
         if filename.endswith('.binetflow'):
             name = filename.split('.')

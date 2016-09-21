@@ -33,12 +33,14 @@
             <div >
               <form class="form-inline a" action="/loadnetflow" method='post' enctype="multipart/form-data">
                 <div class="form-group">
+                  <h3> Preencha os dados de conexão com a o banco de dados:</h3>
                   <input type="text" name="ip" placeholder="Endereço IP">
                   <input type="number" name="port" placeholder="Porta">
                   <input type="text" name="username" placeholder="Usuário">
                   <input type="password" name="password" placeholder="Senha">
                   <input type="text" name="dbname" placeholder="database">
-                  <input type="file" name="file">
+                  <br/>
+                  <h3>Selecione um arquivo:</h3> <input type="file" name="file">
                   <button type="submit" class="btn btn-primary">Buscar</button>
                 </div>
             </div>
