@@ -4,6 +4,7 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for
 import json
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import func
+from sqlalchemy import or_, and_
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from utils import preprocessing
@@ -49,24 +50,26 @@ def search():
         data = json.loads(request.data)
         model = data['model']
         date = data['date']
+        endDate = data['endDate']
         ip = data['ip']
         print(date)
-        if model and date and ip:
-            values = Diagnostics.query.filter_by(addr=ip, model=model, date=date).all()
-        elif model and date:
-            values = Diagnostics.query.filter_by(model=model, date=date).all()
+        if model and date and ip and endDate:
+            values = Diagnostics.query.filter(date>=date, date<=endDate).filter_by(addr=ip, model=model).all()
+        elif model and date and endDate:
+            values = Diagnostics.query.filter(date>=date, date<=endDate).filter_by(model=model).all()
         elif model and ip:
             values = Diagnostics.query.filter_by(model=model, addr=ip).all()
-        elif ip and date:
-            values = Diagnostics.query.filter_by(addr=ip, date=date).all()
+        elif ip and date and endDate:
+            values = Diagnostics.query.filter(date>=date, date<=endDate).filter_by(addr=ip).all()
         elif ip:
             values = Diagnostics.query.filter_by(addr=ip).all()
         elif model:
             values = Diagnostics.query.filter_by(model=model).all()
 
         else:
-            if date:
-                values = Diagnostics.query.filter_by(date=date).all()
+            if date and endDate:
+                values = Diagnostics.query.filter(date>=date, date<=endDate).all()
+                print date, type(endDate)
             else:
                 values = Diagnostics.query.all()
 
@@ -77,7 +80,6 @@ def search():
             result['model'] = value.model.strip()
             result['date'] = str(value.date).strip()
             results.append(result)
-
         return json.dumps(results)
     else:
         pass
@@ -87,8 +89,10 @@ def statistics():
     if request.method == 'POST':
         data = json.loads(request.data)
         date = data['date']
+        endDate = data['endDate']
+        print date, endDate
         if date:
-            values = session.query(Diagnostics.model, func.count('addr').label('ataques')).filter(Diagnostics.date == date).group_by(Diagnostics.model);
+            values = session.query(Diagnostics.model, func.count('addr').label('ataques')).filter(Diagnostics.date >= date, Diagnostics.date<=endDate).group_by(Diagnostics.model);
             results = []
             for value in values:
                 result = {}

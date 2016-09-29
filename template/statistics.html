@@ -48,6 +48,7 @@
           <form class="form-inline a">
             <div class="form-group">
               <input type="text" class="input-append form-control datepicker" data-date-format="yyyy-MM-dd" id="date">
+              <input type="text" class="input-append form-control datepicker" data-date-format="yyyy-MM-dd" id="dateB">
               <button type="button" class="btn btn-primary" id="searchDate">Buscar</button>
             </div>
           </form>
@@ -69,9 +70,11 @@
             document.getElementById('searchDate').onclick =
                 function () {
                    var date = $('#date').val();
+                   var dateB = $('#dateB').val();
+
                    $.ajax({
                      url: '/statistics',
-                     data: JSON.stringify({date: date}),
+                     data: JSON.stringify({date: date, endDate: dateB}),
                      contentType: 'application/json;charset=UTF-8',
                      type: 'POST',
                      success: function(response) {
