@@ -17,6 +17,7 @@ app = Flask(__name__, template_folder='template', static_folder='static', static
 app.config['DEBUG'] = True
 Base = declarative_base()
 
+global_session = 0
 
 UPLOAD_FOLDER = './netflow/'
 ALLOWED_EXTENSIONS = set(['binetflow', 'csv'])
@@ -63,7 +64,7 @@ def search():
             some_engine = create_engine(conn)
             Session = sessionmaker(bind=some_engine)
             session = Session()
-
+            global_session = session
         except:
             render_template('index.html')
 
@@ -105,7 +106,7 @@ def statistics():
         date = data['date']
         endDate = data['endDate']
         if date:
-            values = session.query(Diagnostics.model, func.count('addr').label('ataques')).filter(Diagnostics.date >= date, Diagnostics.date<=endDate).group_by(Diagnostics.model);
+            values = global_session.query(Diagnostics.model, func.count('addr').label('ataques')).filter(Diagnostics.date >= date, Diagnostics.date<=endDate).group_by(Diagnostics.model);
             results = []
             for value in values:
                 result = {}
