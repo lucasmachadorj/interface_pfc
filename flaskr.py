@@ -3,6 +3,8 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 import json
 from flask.ext.sqlalchemy import SQLAlchemy
+from sqlalchemy import Integer, String, Date, Column
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import func
 from sqlalchemy import or_, and_
 from sqlalchemy import create_engine
@@ -10,11 +12,12 @@ from sqlalchemy.orm import sessionmaker
 from utils import preprocessing
 import os
 
+# SQLALCHEMY_DATABASE_URI = "postgresql://postgres:248091-Jr@localhost/pfc"
 
 app = Flask(__name__, template_folder='template', static_folder='static', static_url_path='/static')
 app.config['DEBUG'] = True
-app.config.from_pyfile('config.py')
-db = SQLAlchemy(app)
+# app.config.from_pyfile('config.py')
+Base = declarative_base()
 
 
 UPLOAD_FOLDER = './netflow/'
@@ -27,14 +30,14 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-class Diagnostics(db.Model):
+class Diagnostics(Base):
 
     __tablename__ = 'bot_diagnostics'
 
-    id = db.Column('id', db.Integer, primary_key=True)
-    addr = db.Column('addr', db.Integer)
-    model = db.Column('model', db.String(100))
-    date = db.Column('date', db.Date)
+    id = Column('id', Integer, primary_key=True)
+    addr = Column('addr', Integer)
+    model = Column('model', String(100))
+    date = Column('date', Date)
 
 
 @app.route('/')
@@ -58,33 +61,33 @@ def search():
             date = data['date']
             endDate = data['endDate']
             ip = data['ip']
-
-            some_engine = create_engine('postgresql://{0}:{1}@{2}:{3}/{4}'.format(username, password, connip, port, dbname))
+            conn = 'postgresql://{0}:{1}@{2}:{3}/{4}'.format(username, password, connip, port, dbname)
+            some_engine = create_engine(conn)
             Session = sessionmaker(bind=some_engine)
             session = Session()
+
         except:
             render_template('index.html')
 
 
-
         if model and date and ip and endDate:
-            values = Diagnostics.query.filter(date>=date, date<=endDate).filter_by(addr=ip, model=model).all()
+            values = session.query(Diagnostics).filter(date>=date).filter(date<=endDate).filter_by(addr=ip, model=model).all()
         elif model and date and endDate:
-            values = Diagnostics.query.filter(date>=date, date<=endDate).filter_by(model=model).all()
+            values = session.query(Diagnostics).filter(date>=date).filter(date<=endDate).filter_by(model=model).all()
         elif model and ip:
-            values = Diagnostics.query.filter_by(model=model, addr=ip).all()
+            values = session.query(Diagnostics).filter_by(model=model, addr=ip).all()
         elif ip and date and endDate:
-            values = Diagnostics.query.filter(date>=date, date<=endDate).filter_by(addr=ip).all()
+            values = session.query(Diagnostics).filter(date>=date).filter(date<=endDate).filter_by(addr=ip).all()
         elif ip:
-            values = Diagnostics.query.filter_by(addr=ip).all()
+            values = session.query(Diagnostics).filter_by(addr=ip).all()
         elif model:
-            values = Diagnostics.query.filter_by(model=model).all()
+            values = session.query(Diagnostics).filter_by(model=model).all()
 
         else:
             if date and endDate:
-                values = Diagnostics.query.filter(date>=date, date<=endDate).all()
+                values = session.query(Diagnostics).filter(date>=date).filter(date<=endDate).all()
             else:
-                values = Diagnostics.query.all()
+                values = session.query(Diagnostics).all()
 
         results = []
         for value in values:
