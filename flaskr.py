@@ -16,9 +16,6 @@ app.config['DEBUG'] = True
 app.config.from_pyfile('config.py')
 db = SQLAlchemy(app)
 
-some_engine = create_engine('postgresql://postgres:248091-Jr@localhost/pfc')
-Session = sessionmaker(bind=some_engine)
-session = Session()
 
 UPLOAD_FOLDER = './netflow/'
 ALLOWED_EXTENSIONS = set(['binetflow', 'csv'])
@@ -46,13 +43,30 @@ def main():
 
 @app.route('/search', methods=['POST'])
 def search():
+
     if request.method == 'POST':
-        data = json.loads(request.data)
-        model = data['model']
-        date = data['date']
-        endDate = data['endDate']
-        ip = data['ip']
-        print(date)
+        try:
+            data = json.loads(request.data)
+
+            connip = data['connip']
+            port = data['port']
+            username = data['username']
+            password = data['password']
+            dbname = data['dbname']
+
+            model = data['model']
+            date = data['date']
+            endDate = data['endDate']
+            ip = data['ip']
+
+            some_engine = create_engine('postgresql://{0}:{1}@{2}:{3}/{4}'.format(username, password, connip, port, dbname))
+            Session = sessionmaker(bind=some_engine)
+            session = Session()
+        except:
+            render_template('index.html')
+
+
+
         if model and date and ip and endDate:
             values = Diagnostics.query.filter(date>=date, date<=endDate).filter_by(addr=ip, model=model).all()
         elif model and date and endDate:
@@ -69,7 +83,6 @@ def search():
         else:
             if date and endDate:
                 values = Diagnostics.query.filter(date>=date, date<=endDate).all()
-                print date, type(endDate)
             else:
                 values = Diagnostics.query.all()
 
@@ -90,7 +103,6 @@ def statistics():
         data = json.loads(request.data)
         date = data['date']
         endDate = data['endDate']
-        print date, endDate
         if date:
             values = session.query(Diagnostics.model, func.count('addr').label('ataques')).filter(Diagnostics.date >= date, Diagnostics.date<=endDate).group_by(Diagnostics.model);
             results = []

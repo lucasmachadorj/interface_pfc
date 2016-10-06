@@ -30,10 +30,17 @@
             </div>
         </div>
           <br/>
-            <h3>Pesquisar:</h3>
               <div >
+                <h2> Preencha todos os campos de conexão
                 <form class="form-inline a">
                   <div class="form-group">
+                    <h3> Conexão </h3>
+                    <input type="text" class="form-control" id="connip" placeholder="Endereço do Banco">
+                    <input type="text" class="form-control" id="port" placeholder="Porta">
+                    <input type="text" class="form-control" placeholder="Usuário" id="username">
+                    <input type="password" class="form-control" placeholder="senha" id="password"><br/>
+                    <input type="text" class="form-control" placeholder="database" id="dbname"><br/>
+                    <h3> Pesquisa </h3>
                     <input type="text" class="form-control" id="ip" placeholder="Endereço IP">
                     <input type="text" class="form-control" id="model" placeholder="Modelo">
                     <input type="text" class="input-append form-control datepicker" placeholder="Data" data-date-format="yyyy-MM-dd" id="date">
@@ -60,6 +67,11 @@
            $(function(){ // I use jQuery in this example
                document.getElementById('search').onclick =
                    function () {
+                      var connip = $('#connip').val();
+                      var port = $('#port').val();
+                      var username = $('#username').val();
+                      var passwprd = $('#password').val();
+                      var dbname = $('#dbname').val();
                       var date = $('#date').val();
                       var date2 = $('#date2').val();
                       var model = $('#model').val();
@@ -67,7 +79,8 @@
                       console.log(date);
                       $.ajax({
                         url: '/search',
-                        data: JSON.stringify({model: model, ip: ip, date: date, endDate: date2}),
+                        data: JSON.stringify({model: model, ip: ip, date: date, endDate: date2, connip: connip,
+                          port: port, username: username, password: password, dbname: dbname}),
                         contentType: 'application/json;charset=UTF-8',
                         type: 'POST',
                         success: function(response) {

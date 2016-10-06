@@ -13,9 +13,10 @@ def save_netflow(hostname, port, user, password, dbname ):
             fname = name
 
     data = pd.read_csv(os.path.join('./netflow/',fname))
-    del data['Label']
+    if data['Label']:
+        del data['Label']
+
     data.to_csv('./netflow/{}'.format(fname), header=None, index=None)
-    print hostname, port, user, password, dbname
     try:
         conn = psycopg2.connect(host=hostname, port=port, user=user, password=password, dbname=dbname)
     except:
@@ -30,9 +31,7 @@ def save_netflow(hostname, port, user, password, dbname ):
     os.remove(os.path.join('./netflow/', fname))
 
 def preprocessor(hostname, port, username, password):
-    print 'HOSTNAME: {}'.format(hostname)
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(hostname, int(port), username=username, password=password)
-    stdin, stdout, stderr = ssh.exec_command('cd /home/cristopher/pfc/classifier; ./preprocessor bothunter.conf; ./classifier bothunter.conf;')
-    print stdout.readlines()
+    stdin, stdout, stderr = ssh.exec_command('cd /etc/classifier; ./preprocessor bothunter.conf; ./classifier bothunter.conf;')
