@@ -12,11 +12,9 @@ from sqlalchemy.orm import sessionmaker
 from utils import preprocessing
 import os
 
-# SQLALCHEMY_DATABASE_URI = "postgresql://postgres:248091-Jr@localhost/pfc"
 
 app = Flask(__name__, template_folder='template', static_folder='static', static_url_path='/static')
 app.config['DEBUG'] = True
-# app.config.from_pyfile('config.py')
 Base = declarative_base()
 
 
