@@ -21,6 +21,9 @@
    - pip install paramiko
    - pip install pandas
 
+ - O diretório classifier que contém os executáveis preprocessor e classifier deve
+ ser colocado no caminho /etc.
+
 ### Execução
 
 A partir do diretório /interface, executar o comando: ./flaskr.py
